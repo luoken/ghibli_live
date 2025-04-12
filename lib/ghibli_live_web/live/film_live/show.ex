@@ -2,22 +2,23 @@ defmodule GhibliLiveWeb.FilmLive.Show do
   use GhibliLiveWeb, :live_view
 
   alias Ghibli.Film
+  alias GhibliLive.Likes
 
   def mount(%{"id" => id} = _params, _session, socket) do
     {:ok, film} = Film.get_by(id)
 
-    GhibliLive.Likes.insert_or_update(id)
-    |> IO.inspect()
-
-    {:ok, assign(socket, film: film, likes: 0)}
+    {:ok, assign(socket, film: film, likes: Likes.get_likes(id))}
   end
 
   def handle_event("-1", _params, socket) do
-    {:noreply, assign(socket, likes: socket.assigns.likes - 1)}
+    Likes.insert_or_update(socket.assigns.film.id, -1)
+
+    {:noreply, assign(socket, likes: Likes.get_likes(socket.assigns.film.id))}
   end
 
   def handle_event("+1", _params, socket) do
-    {:noreply, assign(socket, likes: socket.assigns.likes + 1)}
+    Likes.insert_or_update(socket.assigns.film.id, 1)
+    {:noreply, assign(socket, likes: Likes.get_likes(socket.assigns.film.id))}
   end
 
   def render(assigns) do
